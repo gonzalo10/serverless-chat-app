@@ -6,8 +6,6 @@ import Login from './components/login';
 
 import { getPeerId, getUsername } from './utils';
 
-const oldChats = localStorage.getItem('chats');
-
 let peer,
 	peerIds = [];
 
