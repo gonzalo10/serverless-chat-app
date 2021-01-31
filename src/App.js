@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import Peer from 'peerjs';
 
-import Chat from './components/chat';
+import ChatRoom from './components/chat-room';
 import Login from './components/login';
-import TargetUser from './components/target-user';
 
 import { getPeerId, getUsername } from './utils';
 
@@ -15,9 +14,11 @@ let peer,
 function App() {
 	const [userName, setUserName] = useState();
 	const [targetIdInput, setTargetIdInput] = useState();
+	const [userConnected, setUserConnected] = useState([]);
 	const [hasConnection, setHasConnection] = useState(false);
 	const [connections, setConnections] = useState({});
 	const [chats, setChats] = useState([]);
+	const [error, setError] = useState('');
 
 	// First Step: Create the peer for the new user
 	const createPeer = () => {
@@ -30,8 +31,10 @@ function App() {
 			console.error(error);
 			if (error.type === 'peer-unavailable') {
 				console.error(`${targetIdInput} is unreachable!`);
+				setError(`${targetIdInput} is unreachable!`);
 			} else if (error.type === 'unavailable-id') {
 				console.error(`${userName} is already taken!`);
+				setError(`${userName} is already taken!`);
 			} else console.error(error);
 		});
 		peer.on('connection', (conn) => {
@@ -71,14 +74,14 @@ function App() {
 				},
 				serialization: 'json',
 			};
-			console.log(peerId, options);
 			const conn = peer.connect(peerId, options);
 			configureConnection(conn);
 
 			conn.on('open', () => {
 				addConnection(conn);
 				if (getUsername(conn.peer) === targetIdInput) {
-					console.log('connectetd');
+					setUserConnected([...userConnected, , targetIdInput]);
+					console.log('connected');
 				}
 			});
 		}
@@ -86,7 +89,6 @@ function App() {
 
 	const configureConnection = (conn) => {
 		conn.on('data', (data) => {
-			console.log({ data });
 			if (data.type === 'connections') {
 				data.peerIds.forEach((peerId) => {
 					if (!connections[peerId]) {
@@ -126,7 +128,7 @@ function App() {
 	};
 	const receiveChat = (chat) => {
 		const updatedChats = [...chats, chat];
-		setChats(updatedChats);
+		setChats((chats) => [...chats, chat]);
 		localStorage.setItem('chats', JSON.stringify(updatedChats));
 	};
 	const submitChat = (messageText) => {
@@ -136,6 +138,7 @@ function App() {
 				message: messageText,
 				timestamp: new Date().getTime(),
 			};
+			setChats((chats) => [...chats, chat]);
 			Object.values(connections).forEach((conn) => {
 				conn.send({
 					type: 'chat',
@@ -150,16 +153,20 @@ function App() {
 
 	if (hasConnection)
 		return (
-			<div>
-				<TargetUser
-					setTargetIdInput={setTargetIdInput}
-					submitConnection={submitConnection}
-				/>
-				<button onClick={disconnectPeer}>Disconnect</button>
-				<Chat sendMessage={submitChat} chats={chats} />
-			</div>
+			<ChatRoom
+				userName={userName}
+				peerIds={peerIds}
+				setTargetIdInput={setTargetIdInput}
+				submitConnection={submitConnection}
+				submitChat={submitChat}
+				chats={chats}
+				disconnectPeer={disconnectPeer}
+			/>
 		);
-	return <Login createPeer={createPeer} setUserName={setUserName} />;
+
+	return (
+		<Login error={error} createPeer={createPeer} setUserName={setUserName} />
+	);
 }
 
 export default App;

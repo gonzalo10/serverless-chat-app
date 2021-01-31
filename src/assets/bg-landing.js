@@ -27,8 +27,8 @@ export const BgLandingBottom = () => {
 		<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'>
 			<defs>
 				<linearGradient id='gradient' x1='0%' y1='0%' x2='0%' y2='100%'>
-					<stop offset='0%' style={{ 'stop-color': '#5b86e5' }}></stop>
-					<stop offset='100%' style={{ 'stop-color': '#36d1dc' }}></stop>
+					<stop offset='0%' style={{ stopColor: '#5b86e5' }}></stop>
+					<stop offset='100%' style={{ stopColor: '#36d1dc' }}></stop>
 				</linearGradient>
 			</defs>
 			<path
